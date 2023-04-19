@@ -212,7 +212,16 @@ if(WIN32)
         target_link_libraries(crashpad_snapshot PRIVATE dbghelp)
     endif()
     if(MSVC)
-        target_compile_options(crashpad_snapshot PRIVATE "/wd4201")
+        if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang" AND CMAKE_CXX_COMPILER_FRONTEND_VARIANT STREQUAL "MSVC")
+            target_compile_options(crashpad_snapshot PRIVATE
+                    $<$<COMPILE_LANGUAGE:C,CXX>:-Wno-unused-parameter>
+                  #  $<$<COMPILE_LANGUAGE:C,CXX>:-Wno-missing-field-initializers>
+                  #  $<$<COMPILE_LANGUAGE:C,CXX>:-Wno-microsoft-cast>
+                  #  $<$<COMPILE_LANGUAGE:C,CXX>:-Wno-deprecated-declarations>
+                    )
+        else()
+            target_compile_options(crashpad_snapshot PRIVATE "/wd4201")
+        endif()
     endif()
     if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
         target_compile_options(crashpad_snapshot PRIVATE

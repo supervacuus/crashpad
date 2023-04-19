@@ -51,7 +51,7 @@ else()
             zlib/x86.c
         )
 
-        if(NOT MSVC)
+        if(NOT MSVC OR (CMAKE_CXX_COMPILER_ID STREQUAL "Clang" AND CMAKE_CXX_COMPILER_FRONTEND_VARIANT STREQUAL "MSVC"))
             target_compile_options(crashpad_zlib PRIVATE -msse4.2 -mpclmul)
         endif()
     else()
@@ -81,9 +81,17 @@ else()
             "/wd4267" # conversion from 'size_t' to 't', possible loss of data
             "/wd4324" # structure was padded due to alignment specifier
             "/wd4702" # unreachable code
-            "/wd5105" # see https://github.com/getsentry/sentry-native/issues/415
         )
+        if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang" AND CMAKE_CXX_COMPILER_FRONTEND_VARIANT STREQUAL "MSVC")
+            target_compile_options(crashpad_zlib PRIVATE
+                -Wno-deprecated-non-prototype
+                -Wno-deprecated-declarations
+                -Wno-unused-parameter
+                -Wno-implicit-function-declaration
+            )
+        endif()
     endif()
+
 endif()
 
 set_property(TARGET crashpad_zlib PROPERTY EXPORT_NAME zlib)

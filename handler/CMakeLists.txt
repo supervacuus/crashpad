@@ -65,7 +65,14 @@ target_link_libraries(crashpad_handler_lib
 if(WIN32)
     if(MSVC)
         target_link_libraries(crashpad_handler_lib PUBLIC crashpad_getopt)
-        target_compile_options(crashpad_handler_lib PRIVATE "/wd4201")
+
+        if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang" AND CMAKE_CXX_COMPILER_FRONTEND_VARIANT STREQUAL "MSVC")
+            target_compile_options(crashpad_handler_lib PRIVATE
+                $<$<COMPILE_LANGUAGE:C,CXX>:-Wno-unused-parameter>
+            )
+        else()
+            target_compile_options(crashpad_handler_lib PRIVATE $<$<COMPILE_LANGUAGE:C,CXX>:/wd4201>)
+        endif()
     endif()
 endif()
 
@@ -139,7 +146,11 @@ if(CRASHPAD_WER_ENABLED)
             $<BUILD_INTERFACE:crashpad_interface>
             $<BUILD_INTERFACE:crashpad_compat>
     )
-
+    if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang" AND CMAKE_CXX_COMPILER_FRONTEND_VARIANT STREQUAL "MSVC")
+        target_compile_options(crashpad_wer PRIVATE
+                $<$<COMPILE_LANGUAGE:C,CXX>:-Wno-unused-parameter>
+        )
+    endif()
     set_property(TARGET crashpad_wer PROPERTY EXPORT_NAME crashpad_wer)
     set_property(TARGET crashpad_wer PROPERTY PREFIX "") # ensure MINGW doesn't prefix "lib" to dll name
     add_library(crashpad::wer ALIAS crashpad_wer)

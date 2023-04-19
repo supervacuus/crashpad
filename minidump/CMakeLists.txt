@@ -73,7 +73,16 @@ if(CRASHPAD_ENABLE_STACKTRACE)
 endif()
 
 if(MSVC)
-    target_compile_options(crashpad_minidump PRIVATE "/wd4201" "/wd4324")
+    if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang" AND CMAKE_CXX_COMPILER_FRONTEND_VARIANT STREQUAL "MSVC")
+        target_compile_options(crashpad_minidump PRIVATE
+            $<$<COMPILE_LANGUAGE:C,CXX>:-Wno-unused-parameter>
+        )
+    else()
+        target_compile_options(crashpad_minidump PRIVATE
+            $<$<COMPILE_LANGUAGE:C,CXX>:/wd4201> # nonstandard extension used: nameless struct/union
+            $<$<COMPILE_LANGUAGE:C,CXX>:/wd4324> # 'struct_name': structure was padded due to __declspec(align())
+        )
+    endif()
 endif()
 
 if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")

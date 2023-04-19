@@ -524,7 +524,18 @@ endif()
 if(WIN32)
     target_link_libraries(crashpad_util PRIVATE user32 version winhttp)
     if(MSVC)
-        target_compile_options(crashpad_util PRIVATE "/wd4201")
+        if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang" AND CMAKE_CXX_COMPILER_FRONTEND_VARIANT STREQUAL "MSVC")
+            target_compile_options(crashpad_util PRIVATE
+                $<$<COMPILE_LANGUAGE:C,CXX>:-Wno-unused-parameter>
+                $<$<COMPILE_LANGUAGE:C,CXX>:-Wno-microsoft-cast>
+                $<$<COMPILE_LANGUAGE:C,CXX>:-Wno-missing-field-initializers>
+                $<$<COMPILE_LANGUAGE:C,CXX>:-Wno-deprecated-declarations>
+            )
+        else()
+            target_compile_options(crashpad_util PRIVATE
+                $<$<COMPILE_LANGUAGE:C,CXX>:/wd4201> # nonstandard extension used: nameless struct/union
+            )
+        endif()
         if(CMAKE_SIZEOF_VOID_P EQUAL 4)
             set(CMAKE_ASM_MASM_FLAGS "${CMAKE_ASM_MASM_FLAGS} /safeseh")
         endif()

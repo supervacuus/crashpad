@@ -83,7 +83,16 @@ add_library(crashpad::client ALIAS crashpad_client)
 if(WIN32)
     target_link_libraries(crashpad_client PRIVATE rpcrt4)
     if(MSVC)
-        target_compile_options(crashpad_client PRIVATE "/wd4201")
+        if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang" AND CMAKE_CXX_COMPILER_FRONTEND_VARIANT STREQUAL "MSVC")
+            target_compile_options(crashpad_client PRIVATE
+                $<$<COMPILE_LANGUAGE:C,CXX>:-Wno-unused-parameter>
+                $<$<COMPILE_LANGUAGE:C,CXX>:-Wno-missing-field-initializers>
+                $<$<COMPILE_LANGUAGE:C,CXX>:-Wno-microsoft-cast>
+                $<$<COMPILE_LANGUAGE:C,CXX>:-Wno-deprecated-declarations>
+            )
+        else()
+            target_compile_options(crashpad_client PRIVATE "/wd4201")
+        endif()
     elseif(MINGW)
         target_compile_options(crashpad_client PUBLIC
             "-municode"

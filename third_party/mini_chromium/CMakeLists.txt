@@ -181,7 +181,6 @@ target_link_libraries(mini_chromium
 if(WIN32)
     target_link_libraries(mini_chromium PRIVATE advapi32 kernel32)
     if(MSVC)
-        target_compile_options(mini_chromium PRIVATE "/wd4201" "/wd4996")
         target_compile_definitions(mini_chromium PRIVATE
             NOMINMAX
             UNICODE
@@ -190,6 +189,14 @@ if(WIN32)
             _HAS_EXCEPTIONS=0
             _UNICODE
         )
+        if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang" AND CMAKE_CXX_COMPILER_FRONTEND_VARIANT STREQUAL "MSVC")
+           target_compile_options(mini_chromium PRIVATE
+               -Wno-unused-parameter
+               -Wno-sign-compare
+           )
+        else ()
+            target_compile_options(mini_chromium PRIVATE "/wd4201" "/wd4996")
+        endif()
     elseif(MINGW)
         target_compile_options(mini_chromium PRIVATE
             "-municode"
