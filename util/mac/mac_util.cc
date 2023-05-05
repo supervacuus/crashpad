@@ -85,8 +85,8 @@ int DarwinMajorVersion() {
   int rv = uname(&uname_info);
   PCHECK(rv == 0) << "uname";
 
-  DCHECK_EQ(strcmp(uname_info.sysname, "Darwin"), 0) << "unexpected sysname "
-                                                     << uname_info.sysname;
+  DCHECK_EQ(strcmp(uname_info.sysname, "Darwin"), 0)
+      << "unexpected sysname " << uname_info.sysname;
 
   char* dot = strchr(uname_info.release, '.');
   CHECK(dot);
@@ -323,8 +323,13 @@ bool MacOSVersionComponents(int* major,
 }
 
 void MacModelAndBoard(std::string* model, std::string* board_id) {
+#if __MAC_OS_X_VERSION_MIN_REQUIRED < __MAC_12_0
+  mach_port_t mainPort = kIOMasterPortDefault;
+#else
+  mach_port_t mainPort = kIOMainPortDefault;
+#endif
   base::mac::ScopedIOObject<io_service_t> platform_expert(
-      IOServiceGetMatchingService(kIOMasterPortDefault,
+      IOServiceGetMatchingService(mainPort,
                                   IOServiceMatching("IOPlatformExpertDevice")));
   if (platform_expert) {
     model->assign(
@@ -338,8 +343,8 @@ void MacModelAndBoard(std::string* model, std::string* board_id) {
     // alternative.
     CFStringRef kBoardProperty = CFSTR("target-type");
 #endif
-    board_id->assign(IORegistryEntryDataPropertyAsString(platform_expert,
-                                                         kBoardProperty));
+    board_id->assign(
+        IORegistryEntryDataPropertyAsString(platform_expert, kBoardProperty));
   } else {
     model->clear();
     board_id->clear();
